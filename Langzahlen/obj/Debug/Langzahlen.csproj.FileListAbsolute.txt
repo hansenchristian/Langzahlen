@@ -1,1 +1,2 @@
 D:\Dokumente\Master\Parallel Computing\Langzahlen\Langzahlen\bin\Debug\Langzahlen.exe.config
+D:\FH\Master\Parallel Computing\Langzahlen\Langzahlen\Langzahlen\bin\Debug\Langzahlen.exe.config
