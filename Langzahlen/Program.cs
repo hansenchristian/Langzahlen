@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CommandLine;
 using CommandLine.Text;
 using System.IO;
+using System.Numerics;
 
 namespace Langzahlen
 {
@@ -14,7 +15,6 @@ namespace Langzahlen
         static void Main(string[] args)
         {
             string line = "";
-            string result = "";
             var options = new Options();
             if (CommandLine.Parser.Default.ParseArguments(args, options))
             {
@@ -30,27 +30,55 @@ namespace Langzahlen
                         while ((line = sr.ReadLine()) != null)
                         {
                             string[] splited = line.Split(new Char[] {' ',','});
+                            splited = splited.Where(x => !string.IsNullOrEmpty(x)).ToArray();
                             if(splited[0].Equals("PZZ"))
                             {
-                                int i = 2;
-                                long number = long.Parse(splited[1]);
-                                result = result + "PZZ from: " + number;
-
-                                while (number > 1)
+                                Console.WriteLine("PZZ for " + splited[1]);
+                                BigInteger number = BigInteger.Parse(splited[1]);
+                                List<BigInteger> result = calculatePZZ(number);
+                                foreach(BigInteger s in result)
                                 {
-                                    if(number%i == 0)
+                                    Console.Write(s + " ");
+                                }
+                               
+
+                            }else if (splited[0].Equals("KGV"))
+                            {
+                                BigInteger result = 1;
+                                Dictionary<BigInteger, int> highest = new Dictionary<BigInteger, int>();
+                                for (int i =1; i<splited.Length; i++)
+                                {
+                                    BigInteger toCalc = BigInteger.Parse(splited[i]);
+                                    List<BigInteger> claculated = calculatePZZ(toCalc);
+                                    claculated.Sort();
+                                    BigInteger temp = 2;
+                                    int counter = 0;
+                                    foreach (BigInteger bi in claculated)
                                     {
-                                        result = result + i;
-                                        number = number / i;
-                                        i = 2;
-                                    }
-                                    else
-                                    {
-                                        i++;
+                                        if(bi == temp)
+                                        {
+                                            counter++;
+                                        }else {
+                                            if (highest.ContainsKey(bi))
+                                            {
+                                                if (highest[bi] < counter)
+                                                {
+                                                    highest[bi] = counter;
+                                                }
+                                            }
+                                            temp = bi;
+                                            counter = 1;
+                                        }
                                     }
                                 }
-                                Console.WriteLine(result);
-
+                                foreach(KeyValuePair<BigInteger,int> value in highest)
+                                {
+                                    result = result * value.Key * value.Value;
+                                }
+                                    
+                            }else if (splited[0].Equals("GGT"))
+                            {
+                                //ToDo
                             }
                         }
                     }
@@ -67,6 +95,28 @@ namespace Langzahlen
                 }
                 
             }
+        }
+
+        private static List<BigInteger> calculatePZZ(BigInteger number)
+        {
+            
+            int i = 2;
+            List<BigInteger> result = new List<BigInteger>();
+             
+            while (number > 1)
+            {
+                if (number % i == 0)
+                {
+                    result.Add(i);
+                    number = number / i;
+                    i = 2;
+                }
+                else
+                {
+                    i++;
+                }
+            }
+            return result;
         }
     }
 
