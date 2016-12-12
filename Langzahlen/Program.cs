@@ -106,7 +106,7 @@ namespace Langzahlen
 
             await Task.Run(() =>
             {
-                for (int i = 1; i < _split.Length; i++)
+                Parallel.For(1, _split.Length, i =>
                 {
                     BigInteger toCalc = BigInteger.Parse(_split[i]);
                     List<BigInteger> calculated = calculatePZZ(toCalc);
@@ -121,7 +121,7 @@ namespace Langzahlen
 
                         if (option == "KGV")
                         {
-                            foreach (KeyValuePair<BigInteger, int> value in tempfactors)
+                            Parallel.ForEach(tempfactors, (KeyValuePair<BigInteger, int> value) =>
                             {
                                 if (!primefactors.ContainsKey(value.Key))
                                 {
@@ -131,24 +131,24 @@ namespace Langzahlen
                                 {
                                     primefactors[value.Key] = value.Value;
                                 }
-                            }
+                            });
                         }
                         else if (option == "GGT")
                         {
-                            foreach (KeyValuePair<BigInteger, int> value in primefactors)
+                            Parallel.ForEach(primefactors, (KeyValuePair<BigInteger, int> value) =>
+                        {
+                            if (!tempfactors.ContainsKey(value.Key))
                             {
-                                if (!tempfactors.ContainsKey(value.Key))
-                                {
-                                    tempfactors.Add(value.Key, 0);
-                                }
+                                tempfactors.Add(value.Key, 0);
                             }
+                        });
 
                             primefactors = primefactors.Concat(tempfactors.Where(kvp => primefactors.ContainsKey(kvp.Key)))
                            .GroupBy(x => x.Key)
                            .ToDictionary(x => x.Key, x => x.Min(y => y.Value));
                         }
                     }
-                }
+                });
             });
 
             foreach (KeyValuePair<BigInteger, int> value in primefactors)
@@ -227,23 +227,73 @@ namespace Langzahlen
             
             int i = 2;
             List<BigInteger> result = new List<BigInteger>();
-             
-            while (number > 1)
+
+            //while (number > 1)
+            //{
+            //    if (number % i == 0)
+            //    {
+            //        result.Add(i);
+            //        number = number / i;
+            //        i = 2;
+            //    }
+            //    else
+            //    {
+            //        i++;
+            //    }
+            //}
+
+            if (isPrime(number) == true)
             {
-                if (number % i == 0)
+                result.Add(number);
+            }
+            else
+            {
+                BigInteger nextFactor = 2;
+                BigInteger tempFactor = 3;
+
+                while (number > 1)
                 {
-                    result.Add(i);
-                    number = number / i;
-                    i = 2;
-                }
-                else
-                {
-                    i++;
+                    if (number % nextFactor > 0)
+                    {
+                        nextFactor = tempFactor;
+                        do
+                        {
+                            if (number % nextFactor == 0)
+                            {
+                                tempFactor = nextFactor;
+                                break;
+                            }
+
+                            nextFactor += 2;
+                            //Console.WriteLine(nextFactor);
+                        } while (nextFactor < number);
+                    }
+
+                    number /= nextFactor;
+                    result.Add(nextFactor);
                 }
             }
+
+
             return result;
         }
+
+        public static bool isPrime(BigInteger number)
+        {
+            if (number == 1) return false;
+            if (number == 2) return true;
+
+            var boundary = (BigInteger)Math.Floor(Math.Pow(Math.E, BigInteger.Log(number) / 2));
+
+            for (BigInteger i = 2; i <= boundary; ++i)
+            {
+                if (number % i == 0) return false;
+            }
+
+            return true;
+        }
     }
+
 
     class Options
     {
