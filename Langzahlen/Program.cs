@@ -50,8 +50,17 @@ namespace Langzahlen
                             }
                             else if (splited[0].Equals("KGV"))
                             {
-                                BigInteger kgv = calculateKGVorGGT(splited, splited[0]);
-                                Console.WriteLine(System.Environment.NewLine + line + System.Environment.NewLine + kgv);
+                                if (options.parallel)
+                                {
+                                    BigInteger kgv = calculateKGVorGGT(splited, splited[0]);
+                                    Console.WriteLine(System.Environment.NewLine + line + System.Environment.NewLine + kgv);
+                                }
+                                else
+                                {
+                                    BigInteger kgv = calculateKGVorGGT(splited, splited[0]);
+                                    Console.WriteLine(System.Environment.NewLine + line + System.Environment.NewLine + kgv);
+                                }
+                                
                             }
                             else if (splited[0].Equals("GGT"))
                             {
@@ -88,6 +97,69 @@ namespace Langzahlen
             {
                 Console.ReadKey();
             }
+        }
+
+        async private Task<BigInteger> calculateKGVorGGTAsync(string[] _split, string option)
+        {
+            BigInteger result = 1;
+            Dictionary<BigInteger, int> primefactors = new Dictionary<BigInteger, int>();
+
+            await Task.Run(() =>
+            {
+                for (int i = 1; i < _split.Length; i++)
+                {
+                    BigInteger toCalc = BigInteger.Parse(_split[i]);
+                    List<BigInteger> calculated = calculatePZZ(toCalc);
+
+                    if (i == 1 || primefactors == null)
+                    {
+                        primefactors = calculated.GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
+                    }
+                    else
+                    {
+                        Dictionary<BigInteger, int> tempfactors = calculated.GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
+
+                        if (option == "KGV")
+                        {
+                            foreach (KeyValuePair<BigInteger, int> value in tempfactors)
+                            {
+                                if (!primefactors.ContainsKey(value.Key))
+                                {
+                                    primefactors.Add(value.Key, value.Value);
+                                }
+                                else if (primefactors[value.Key] < value.Value)
+                                {
+                                    primefactors[value.Key] = value.Value;
+                                }
+                            }
+                        }
+                        else if (option == "GGT")
+                        {
+                            foreach (KeyValuePair<BigInteger, int> value in primefactors)
+                            {
+                                if (!tempfactors.ContainsKey(value.Key))
+                                {
+                                    tempfactors.Add(value.Key, 0);
+                                }
+                            }
+
+                            primefactors = primefactors.Concat(tempfactors.Where(kvp => primefactors.ContainsKey(kvp.Key)))
+                           .GroupBy(x => x.Key)
+                           .ToDictionary(x => x.Key, x => x.Min(y => y.Value));
+                        }
+                    }
+                }
+            });
+
+            foreach (KeyValuePair<BigInteger, int> value in primefactors)
+            {
+                for (int i = 0; i < value.Value; i++)
+                {
+                    result = result * value.Key;
+                }
+            }
+
+            return result;
         }
 
         private static BigInteger calculateKGVorGGT(string[] _split, string option)
