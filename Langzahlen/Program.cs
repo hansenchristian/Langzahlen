@@ -15,6 +15,7 @@ namespace Langzahlen
         static void Main(string[] args)
         {
             string line = "";
+            string output = "";
             var options = new Options();
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
@@ -39,39 +40,39 @@ namespace Langzahlen
 
                             if (splited[0].Equals("PZZ"))
                             {
-                                Console.WriteLine(System.Environment.NewLine + line);
+                                output = output + (System.Environment.NewLine + line);
                                 BigInteger number = BigInteger.Parse(splited[1]);
                                 List<BigInteger> result = calculatePZZ(number);
                                 foreach(BigInteger s in result)
                                 {
-                                    Console.Write(s + " ");
+                                    output = output + (s + " ");
                                 }
-                                Console.Write(System.Environment.NewLine);
+                                output = output + (System.Environment.NewLine);
                             }
                             else if (splited[0].Equals("KGV"))
                             {
                                 if (options.parallel)
                                 {
                                     BigInteger kgv = calculateKGVorGGT(splited, splited[0]);
-                                    Console.WriteLine(System.Environment.NewLine + line + System.Environment.NewLine + kgv);
+                                    output = output + (System.Environment.NewLine + line + System.Environment.NewLine + kgv);
                                 }
                                 else
                                 {
                                     BigInteger kgv = calculateKGVorGGT(splited, splited[0]);
-                                    Console.WriteLine(System.Environment.NewLine + line + System.Environment.NewLine + kgv);
+                                    output = output + (System.Environment.NewLine + line + System.Environment.NewLine + kgv);
                                 }
                                 
                             }
                             else if (splited[0].Equals("GGT"))
                             {
                                 BigInteger ggt = calculateKGVorGGT(splited, splited[0]);
-                                Console.WriteLine(System.Environment.NewLine + line + System.Environment.NewLine + ggt);
+                                output = output + (System.Environment.NewLine + line + System.Environment.NewLine + ggt);
                             }
 
 
                             if (options.time)
                             {
-                                Console.WriteLine("Time: " + linewatch.ElapsedMilliseconds + " ms");
+                                output = output + ("Time: " + linewatch.ElapsedMilliseconds + " ms");
                             }
                         }
                     }
@@ -90,12 +91,21 @@ namespace Langzahlen
 
             if (options.time)
             {
-                Console.WriteLine(System.Environment.NewLine + "Overall Time: " + watch.ElapsedMilliseconds + " ms");
+                output = output + (System.Environment.NewLine + "Overall Time: " + watch.ElapsedMilliseconds + " ms");
             }
 
             if (options.wait)
             {
                 Console.ReadKey();
+            }
+            if (!options.oFile.Equals(""))
+            {
+                StreamWriter file = new StreamWriter("c:\\" + options.oFile);
+                file.Write(output);
+            }
+            else
+            {
+                Console.Write(output);
             }
         }
 
@@ -257,7 +267,7 @@ namespace Langzahlen
         public string iFile { get; set; }
 
         [Option('o', HelpText = "Output filename", DefaultValue = "")]
-        public string filename { get; set; }
+        public string oFile { get; set; }
 
         [Option('t', HelpText = "Processing time", DefaultValue = false)]
         public bool time { get; set; }
